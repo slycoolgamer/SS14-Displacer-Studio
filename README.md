@@ -1,6 +1,6 @@
 ![enter image description here](https://freeimghost.net/images/2025/06/06/Untitle3d.png)
 
-![GUI](https://freeimghost.net/images/2025/06/06/Screenshot-2025-06-05-233545.png)
+![GUI](https://freeimghost.net/images/2025/06/06/Screenshot-2025-06-06-235648.png)
 
 **What is it**
 SS14 displacement studio is a simple application for drawing displacement maps for the game space station 14. previously the only option was a asesprite plugin. it has drawing tools to change displacement direction. erase tool to make pixels transparent select tools. ect
