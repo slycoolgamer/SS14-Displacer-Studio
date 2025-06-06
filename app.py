@@ -16,7 +16,7 @@ import os
 class SS14DisplacementTool:
     def __init__(self):
         self.root = tk.Tk()
-        #self.root.iconbitmap(os.path.join(os.getcwd(), 'appicon.ico'))
+        self.root.iconbitmap(os.path.join(os.getcwd(), 'appicon.ico'))
         self.root.title("SS14 Displacement Studio")
         self.root.geometry("1400x900")
         
