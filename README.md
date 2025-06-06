@@ -1,12 +1,24 @@
-
-
-# SS14 Displacement Studio
+![enter image description here](https://freeimghost.net/images/2025/06/06/Untitl222ed.png)
 
 ![GUI](https://freeimghost.net/images/2025/06/06/Screenshot-2025-06-05-233545.png)
 
+**What is it**
 SS14 displacement studio is a simple application for drawing displacement maps for the game space station 14. previously the only option was a asesprite plugin. it has drawing tools to change displacement direction. erase tool to make pixels transparent select tools. ect
+**How to use**
+Load background {a background like a humanoid to fit onto]
+Load refrence {image to edit like clothes]
+Create new displacement map or load one
+Save
 
-You can draw on the canvas or on the preview which will also draw on the canvas if you prefer.
+Use the paint tools to change a pixel to another pixel in a direction
+You can click on the preview too to edit if you prefer
 
+Erase just makes a pixel transparent
 
-Enjoy the application if there are issues just let me know and ill sort them at somepoint
+Selections allow you to only be able to effect a part of the canvas
+
+Pixel Strength can let you move by multiple pixels in one click rather then multiple
+
+**Final note**
+
+Enjoy the application if there are issues just let me know and ill sort them at somepoint 
