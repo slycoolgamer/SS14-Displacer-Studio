@@ -539,10 +539,12 @@ class SS14DisplacementTool:
                     result_data[y, x] = [0, 0, 0, 0]
                     continue
                 
-                # Calculate offset - FIXED: Ensure proper normalization
-                # Convert from 0-255 range to -1 to +1, then scale
+                # Calculate offset
                 offset_x = ((disp_pixel[0] - 128) / 127.0) * displacement_size
                 offset_y = ((disp_pixel[1] - 128) / 127.0) * displacement_size
+                
+                # CRITICAL FIX: SS14 inverts Y displacement with vec2(1.0, -1.0)
+                offset_y = -offset_y
                 
                 # FIXED: Clamp offsets to prevent extreme displacement
                 max_offset = displacement_size * 0.5  # Limit to half the displacement size
@@ -553,13 +555,13 @@ class SS14DisplacementTool:
                 sample_x = x + offset_x
                 sample_y = y + offset_y
                 
-                # FIXED: Better bounds checking and clamping
+                #bounds checking and clamping
                 if (sample_x < -0.5 or sample_x >= width - 0.5 or 
                     sample_y < -0.5 or sample_y >= height - 0.5):
                     # Out of bounds = transparent
                     result_data[y, x] = [0, 0, 0, 0]
                 else:
-                    # FIXED: Proper bilinear interpolation instead of simple rounding
+                    #bilinear interpolation instead of simple rounding
                     sample_x_floor = int(np.floor(sample_x))
                     sample_y_floor = int(np.floor(sample_y))
                     sample_x_ceil = sample_x_floor + 1
