@@ -527,24 +527,66 @@ class SS14DisplacementTool:
         ref_data = np.array(reference)
         result_data = np.zeros((height, width, 4), dtype=np.uint8)
         
-        # Changed displacement_size from 4.0 to 1.0 for one-to-one pixel movement
-        displacement_size = 1.0
+        # Fixed displacement size - this should be consistent
+        displacement_size = 127
         
         for y in range(height):
             for x in range(width):
                 disp_pixel = disp_data[y, x]
                 
+                # Skip fully transparent displacement pixels
                 if disp_pixel[3] == 0:
                     result_data[y, x] = [0, 0, 0, 0]
                     continue
+                
+                # Calculate offset - FIXED: Ensure proper normalization
+                # Convert from 0-255 range to -1 to +1, then scale
+                offset_x = ((disp_pixel[0] - 128) / 127.0) * displacement_size
+                offset_y = ((disp_pixel[1] - 128) / 127.0) * displacement_size
+                
+                # FIXED: Clamp offsets to prevent extreme displacement
+                max_offset = displacement_size * 0.5  # Limit to half the displacement size
+                offset_x = max(-max_offset, min(max_offset, offset_x))
+                offset_y = max(-max_offset, min(max_offset, offset_y))
+                
+                # Sample from the offset position
+                sample_x = x + offset_x
+                sample_y = y + offset_y
+                
+                # FIXED: Better bounds checking and clamping
+                if (sample_x < -0.5 or sample_x >= width - 0.5 or 
+                    sample_y < -0.5 or sample_y >= height - 0.5):
+                    # Out of bounds = transparent
+                    result_data[y, x] = [0, 0, 0, 0]
+                else:
+                    # FIXED: Proper bilinear interpolation instead of simple rounding
+                    sample_x_floor = int(np.floor(sample_x))
+                    sample_y_floor = int(np.floor(sample_y))
+                    sample_x_ceil = sample_x_floor + 1
+                    sample_y_ceil = sample_y_floor + 1
                     
-                offset_x = (disp_pixel[0] - 128) * displacement_size
-                offset_y = (disp_pixel[1] - 128) * displacement_size
-                
-                sample_x = max(0, min(width - 1, int(round(x + offset_x))))
-                sample_y = max(0, min(height - 1, int(round(y + offset_y))))
-                
-                result_data[y, x] = ref_data[sample_y, sample_x]
+                    # Clamp to valid bounds
+                    sample_x_floor = max(0, min(width - 1, sample_x_floor))
+                    sample_y_floor = max(0, min(height - 1, sample_y_floor))
+                    sample_x_ceil = max(0, min(width - 1, sample_x_ceil))
+                    sample_y_ceil = max(0, min(height - 1, sample_y_ceil))
+                    
+                    # Get fractional parts for interpolation
+                    fx = sample_x - sample_x_floor
+                    fy = sample_y - sample_y_floor
+                    
+                    # Sample four neighboring pixels
+                    tl = ref_data[sample_y_floor, sample_x_floor]  # top-left
+                    tr = ref_data[sample_y_floor, sample_x_ceil]   # top-right
+                    bl = ref_data[sample_y_ceil, sample_x_floor]   # bottom-left
+                    br = ref_data[sample_y_ceil, sample_x_ceil]    # bottom-right
+                    
+                    # Bilinear interpolation
+                    top = tl * (1 - fx) + tr * fx
+                    bottom = bl * (1 - fx) + br * fx
+                    final = top * (1 - fy) + bottom * fy
+                    
+                    result_data[y, x] = final.astype(np.uint8)
                             
         return Image.fromarray(result_data, 'RGBA')
         
