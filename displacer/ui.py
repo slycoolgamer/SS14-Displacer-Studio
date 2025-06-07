@@ -23,13 +23,13 @@ def setup_menubar(root, app):
     edit_menu.add_command(label="Undo", command=app.undo, accelerator="Ctrl+Z")
     edit_menu.add_command(label="Clear All", command=app.clear)
     edit_menu.add_command(label="Flip Displacement", command=app.flip_displacement)
+    edit_menu.add_separator()
     edit_menu.add_command(label="Deselect", command=app.deselect_all)
     edit_menu.add_command(label="Select All", command=app.select_all)
     edit_menu.add_command(label="Invert Selection", command=app.invert_selection)
 
     view_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="View", menu=view_menu)
-    view_menu.add_command(label="Coming Soon")
     
     root.bind('<Control-z>', lambda e: app.undo())
     root.bind('<Control-a>', lambda e: app.select_all())
@@ -39,43 +39,50 @@ def setup_controls(parent, app):
     tool_frame = ttk.LabelFrame(parent, text="Tools")
     tool_frame.pack(fill=tk.X, pady=5)
     
-    tools = [("Paint", "paint"), ("Rectangle Select", "rect"), ("Lasso Select", "lasso"), ("Magic Select", "magic")]
+    # Updated tools list - Paint and Erase are now separate tools
+    tools = [
+        ("Paint", "paint"), 
+        ("Erase", "erase"),
+        ("Rectangle Select", "rect"), 
+        ("Lasso Select", "lasso"), 
+        ("Magic Select", "magic")
+    ]
     for text, value in tools:
-        ttk.Radiobutton(tool_frame, text=text, variable=app.current_tool, value=value).pack(anchor=tk.W)
+        ttk.Radiobutton(tool_frame, text=text, variable=app.current_tool, value=value, 
+                       command=app.update_tool_ui).pack(anchor=tk.W)
         
-    sel_frame = ttk.LabelFrame(parent, text="Selection Mode")
-    sel_frame.pack(fill=tk.X, pady=5)
+    # Store reference to selection frame for dynamic show/hide
+    app.sel_frame = ttk.LabelFrame(parent, text="Selection Mode")
     
     ops = [("Replace", "replace"), ("Add", "add"), ("Subtract", "subtract"), ("Intersect", "intersect")]
     for text, value in ops:
-        ttk.Radiobutton(sel_frame, text=text, variable=app.selection_op, value=value).pack(anchor=tk.W)
+        ttk.Radiobutton(app.sel_frame, text=text, variable=app.selection_op, value=value).pack(anchor=tk.W)
         
-    ttk.Button(sel_frame, text="Invert", command=app.invert_selection).pack(fill=tk.X, pady=2)
-    ttk.Button(sel_frame, text="Clear", command=app.deselect_all).pack(fill=tk.X)
+    ttk.Label(app.sel_frame, text="Magic Tolerance:").pack(pady=(10,0))
+    ttk.Scale(app.sel_frame, from_=1, to=100, variable=app.magic_tolerance, orient=tk.HORIZONTAL).pack(fill=tk.X)
     
-    ttk.Label(sel_frame, text="Magic Tolerance:").pack(pady=(10,0))
-    ttk.Scale(sel_frame, from_=1, to=100, variable=app.magic_tolerance, orient=tk.HORIZONTAL).pack(fill=tk.X)
+    # Renamed from "Paint Tools" to "Brush Settings" since it now applies to both paint and erase
+    # Store reference to brush frame for dynamic show/hide
+    app.brush_frame = ttk.LabelFrame(parent, text="Brush Settings")
     
-    draw_frame = ttk.LabelFrame(parent, text="Paint Tools")
-    draw_frame.pack(fill=tk.X, pady=5)
-    
-    ttk.Label(draw_frame, text="Direction:").pack(pady=(5,0))
-    dir_frame = ttk.Frame(draw_frame)
+    ttk.Label(app.brush_frame, text="Direction:").pack(pady=(5,0))
+    dir_frame = ttk.Frame(app.brush_frame)
     dir_frame.pack(pady=5)
     
     directions = [("↑", "up", 0, 1), ("←", "left", 0, 0), ("→", "right", 0, 2), ("↓", "down", 1, 1)]
     for text, value, row, col in directions:
         ttk.Radiobutton(dir_frame, text=text, variable=app.displacement_direction, value=value, width=3).grid(row=row, column=col, padx=2, pady=2)
         
-    ttk.Label(draw_frame, text="Mode:").pack(pady=(10,0))
-    ttk.Radiobutton(draw_frame, text="Paint Direction", variable=app.drawing_mode, value="directional").pack(anchor=tk.W)
-    ttk.Radiobutton(draw_frame, text="Erase", variable=app.drawing_mode, value="erase").pack(anchor=tk.W)
+    # Removed the Mode section since Paint/Erase are now separate tools
     
-    ttk.Label(draw_frame, text="Brush Size:").pack(pady=(10,0))
-    ttk.Scale(draw_frame, from_=1, to=50, variable=app.brush_size, orient=tk.HORIZONTAL).pack(fill=tk.X)
+    ttk.Label(app.brush_frame, text="Brush Size:").pack(pady=(10,0))
+    ttk.Scale(app.brush_frame, from_=1, to=50, variable=app.brush_size, orient=tk.HORIZONTAL).pack(fill=tk.X)
     
-    ttk.Label(draw_frame, text="Paint Strength (pixels):").pack(pady=(10,0))
-    ttk.Spinbox(draw_frame, from_=1, to=20, textvariable=app.paint_strength, width=10).pack(fill=tk.X)
+    ttk.Label(app.brush_frame, text="Paint Strength (pixels):").pack(pady=(10,0))
+    ttk.Spinbox(app.brush_frame, from_=1, to=20, textvariable=app.paint_strength, width=10).pack(fill=tk.X)
+    
+    # Initially show/hide frames based on default tool
+    app.update_tool_ui()
 
 def setup_canvas(parent, app):
     paned = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
@@ -120,4 +127,3 @@ def display_image_on_canvas(image, canvas, zoom, attr_name):
     y = (canvas_h - display_size[1]) // 2
     
     canvas.create_image(x, y, anchor=tk.NW, image=photo)
-
