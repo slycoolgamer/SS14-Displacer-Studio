@@ -15,8 +15,7 @@ def setup_menubar(root, app):
     file_menu.add_command(label="Load Displacement Map", command=app.load_displacement)
     file_menu.add_separator()
     file_menu.add_command(label="Save Displacement Map", command=app.save_displacement)
-    file_menu.add_separator()
-    file_menu.add_command(label="Exit", command=root.quit)
+    file_menu.add_command(label="Save Preview", command=app.save_preview)
     
     edit_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="Edit", menu=edit_menu)
@@ -79,7 +78,7 @@ def setup_controls(parent, app):
     ttk.Label(app.brush_frame, text="Brush Size:").pack(pady=(10,0))
     ttk.Scale(app.brush_frame, from_=1, to=50, variable=app.brush_size, orient=tk.HORIZONTAL).pack(fill=tk.X)
     
-    ttk.Label(app.brush_frame, text="Paint Strength (pixels):").pack(pady=(10,0))
+    ttk.Label(app.brush_frame, text="Paint Strength (pixel change):").pack(pady=(10,0))
     ttk.Spinbox(app.brush_frame, from_=1, to=20, textvariable=app.paint_strength, width=10).pack(fill=tk.X)
     
     # Initially show/hide frames based on default tool
@@ -95,7 +94,7 @@ def setup_canvas(parent, app):
     app.disp_canvas = tk.Canvas(disp_frame, bg='gray30')
     app.disp_canvas.pack(fill=tk.BOTH, expand=True)
     
-    prev_frame = ttk.LabelFrame(paned, text="Live Preview")
+    prev_frame = ttk.LabelFrame(paned, text="Preview Editor")
     paned.add(prev_frame, weight=1)
     
     app.prev_canvas = tk.Canvas(prev_frame, bg='gray20')
