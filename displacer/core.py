@@ -238,7 +238,49 @@ class SS14DisplacementTool:
         if filename:
             self.displacement_image.save(filename)
             messagebox.showinfo("Success", f"Saved to {filename}\n\nRemember to set sRGB: false in RSI meta.json!")
+
+    def save_preview(self):
+        if not self.displacement_image:
+            messagebox.showwarning("Warning", "No displacement map to generate preview")
+            return
             
+        # Generate the preview image (same logic as update_preview)
+        if self.reference_image:
+            displaced_ref = image_processing.apply_ss14_displacement(
+                self.reference_image, 
+                self.displacement_image
+            )
+            preview = image_processing.composite_images(
+                self.background_image, 
+                displaced_ref
+            ) if self.background_image and displaced_ref else displaced_ref
+        elif self.background_image:
+            preview = image_processing.apply_ss14_displacement(
+                self.background_image, 
+                self.displacement_image
+            )
+        else:
+            messagebox.showwarning("Warning", "No reference or background image to generate preview")
+            return
+            
+        if not preview:
+            messagebox.showwarning("Warning", "Failed to generate preview image")
+            return
+            
+        # Ask for save location
+        filename = filedialog.asksaveasfilename(
+            title="Save Preview Image",
+            defaultextension=".png",
+            filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg *.jpeg"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            try:
+                preview.save(filename)
+                messagebox.showinfo("Success", f"Preview saved to {filename}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save preview: {str(e)}")
+    
     def create_new(self):
         base_image = self.reference_image or self.background_image
         size = base_image.size if base_image else self.get_size_from_dialog()
