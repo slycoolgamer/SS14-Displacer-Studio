@@ -22,11 +22,12 @@ def setup_menubar(root, app):
     menubar.add_cascade(label="Edit", menu=edit_menu)
     edit_menu.add_command(label="Undo", command=app.undo, accelerator="Ctrl+Z")
     edit_menu.add_command(label="Clear All", command=app.clear)
-    edit_menu.add_command(label="Flip Displacement", command=app.flip_displacement)
     edit_menu.add_separator()
     edit_menu.add_command(label="Deselect", command=app.deselect_all)
     edit_menu.add_command(label="Select All", command=app.select_all)
     edit_menu.add_command(label="Invert Selection", command=app.invert_selection)
+    edit_menu.add_separator()
+    edit_menu.add_command(label="Invert Displacement", command=app.flip_displacement)
 
     view_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="View", menu=view_menu)
