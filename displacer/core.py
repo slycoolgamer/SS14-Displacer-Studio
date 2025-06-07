@@ -37,7 +37,7 @@ class SS14DisplacementTool:
         
         # Drawing state
         self.is_drawing = False
-        self.drawing_mode = tk.StringVar(value="directional")
+        # Removed drawing_mode variable since it's now handled by current_tool
         self.displacement_direction = tk.StringVar(value="right")
         
         # Undo system
@@ -60,6 +60,22 @@ class SS14DisplacementTool:
         ui.setup_controls(control_frame, self)
         ui.setup_canvas(canvas_frame, self)
         
+    def update_tool_ui(self):
+        """Show/hide UI frames based on selected tool"""
+        tool = self.current_tool.get()
+        
+        # Show selection frame only for selection tools
+        if tool in ["rect", "lasso", "magic"]:
+            self.sel_frame.pack(fill=tk.X, pady=5)
+        else:
+            self.sel_frame.pack_forget()
+            
+        # Show brush frame only for paint/erase tools
+        if tool in ["paint", "erase"]:
+            self.brush_frame.pack(fill=tk.X, pady=5)
+        else:
+            self.brush_frame.pack_forget()
+        
     def canvas_click(self, event, from_preview=False):
         if not self.displacement_image:
             return
@@ -70,7 +86,8 @@ class SS14DisplacementTool:
         if not pos:
             return
 
-        if tool == "paint":
+        # Updated to handle paint and erase as separate tools
+        if tool in ["paint", "erase"]:
             self.save_state()
             self.is_drawing = True
             self.paint_displacement(*pos)
@@ -94,7 +111,8 @@ class SS14DisplacementTool:
         if not pos:
             return
 
-        if tool == "paint" and self.is_drawing:
+        # Updated to handle paint and erase as separate tools
+        if tool in ["paint", "erase"] and self.is_drawing:
             self.paint_displacement(*pos)
         elif tool == "rect" and self.selection_start:
             self.temp_selection = selection_tools.create_rect_selection(
@@ -110,7 +128,8 @@ class SS14DisplacementTool:
     def canvas_release(self, event, from_preview=False):
         tool = self.current_tool.get()
 
-        if tool == "paint":
+        # Updated to handle paint and erase as separate tools
+        if tool in ["paint", "erase"]:
             self.is_drawing = False
         elif tool == "rect" and self.temp_selection:
             self.apply_selection(self.temp_selection)
@@ -277,7 +296,8 @@ class SS14DisplacementTool:
             if self.selection_mask.getpixel((x, y)) == 0:
                 return
                 
-        mode = self.drawing_mode.get()
+        # Updated to use current_tool instead of drawing_mode
+        tool = self.current_tool.get()
         direction = self.displacement_direction.get()
         brush_size = self.brush_size.get()
         strength = self.paint_strength.get()
@@ -289,7 +309,7 @@ class SS14DisplacementTool:
             "up": (0, -strength), "down": (0, strength)
         }
         
-        mod_r, mod_g = direction_modifiers.get(direction, (0, 0)) if mode == "directional" else (0, 0)
+        mod_r, mod_g = direction_modifiers.get(direction, (0, 0)) if tool == "paint" else (0, 0)
             
         for dy in range(-radius, radius + 1):
             for dx in range(-radius, radius + 1):
@@ -306,7 +326,7 @@ class SS14DisplacementTool:
                     
                 current = list(self.displacement_image.getpixel((px, py)))
                 
-                if mode == "erase":
+                if tool == "erase":
                     current = [128, 128, 0, 0]
                 else:
                     current[0] = max(0, min(255, current[0] + mod_r))
