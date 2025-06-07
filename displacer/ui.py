@@ -23,12 +23,13 @@ def setup_menubar(root, app):
     edit_menu.add_command(label="Undo", command=app.undo, accelerator="Ctrl+Z")
     edit_menu.add_command(label="Clear All", command=app.clear)
     edit_menu.add_command(label="Flip Displacement", command=app.flip_displacement)
-    
-    select_menu = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label="Select", menu=select_menu)
-    select_menu.add_command(label="Select All", command=app.select_all)
-    select_menu.add_command(label="Deselect", command=app.deselect_all)
-    select_menu.add_command(label="Invert Selection", command=app.invert_selection)
+    edit_menu.add_command(label="Deselect", command=app.deselect_all)
+    edit_menu.add_command(label="Select All", command=app.select_all)
+    edit_menu.add_command(label="Invert Selection", command=app.invert_selection)
+
+    view_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="View", menu=view_menu)
+    view_menu.add_command(label="Coming Soon")
     
     root.bind('<Control-z>', lambda e: app.undo())
     root.bind('<Control-a>', lambda e: app.select_all())
@@ -119,3 +120,4 @@ def display_image_on_canvas(image, canvas, zoom, attr_name):
     y = (canvas_h - display_size[1]) // 2
     
     canvas.create_image(x, y, anchor=tk.NW, image=photo)
+
