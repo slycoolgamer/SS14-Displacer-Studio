@@ -196,7 +196,19 @@ class SS14DisplacementTool:
         self.load_image("Load Background Image", lambda img: setattr(self, 'background_image', img))
             
     def load_displacement(self):
-        self.load_image("Load Displacement Map", lambda img: setattr(self, 'displacement_image', img))
+        def process_image(img):
+            # Convert to RGBA if not already
+            img = img.convert("RGBA")
+            
+            # Fix transparent pixels to have neutral color
+            data = np.array(img)
+            transparent = data[:, :, 3] == 0
+            data[transparent] = [128, 128, 0, 0]  # Set RGB to neutral, keep alpha 0
+            
+            # Set the fixed image
+            self.displacement_image = Image.fromarray(data, 'RGBA')
+            
+        self.load_image("Load Displacement Map", process_image)
             
     def save_displacement(self):
         if not self.displacement_image:
