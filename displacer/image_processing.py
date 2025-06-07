@@ -3,7 +3,18 @@ from PIL import Image, ImageDraw
 from collections import deque
 import math
 
-def apply_ss14_displacement(reference, displacement, displacement_size=127):
+def apply_ss14_displacement(reference, displacement, displacement_size=1.0):
+    """
+    Apply SS14-style displacement mapping with simplified pixel-perfect movement.
+    
+    Args:
+        reference: PIL Image - the reference image to displace
+        displacement: PIL Image - the displacement map
+        displacement_size: float - displacement multiplier (default 1.0 for one-to-one pixel movement)
+    
+    Returns:
+        PIL Image - the displaced image
+    """
     if not reference or not displacement:
         return None
         
@@ -19,48 +30,22 @@ def apply_ss14_displacement(reference, displacement, displacement_size=127):
         for x in range(width):
             disp_pixel = disp_data[y, x]
             
+            # Skip transparent pixels in displacement map
             if disp_pixel[3] == 0:
                 result_data[y, x] = [0, 0, 0, 0]
                 continue
             
-            offset_x = ((disp_pixel[0] - 128) / 127.0) * displacement_size
-            offset_y = ((disp_pixel[1] - 128) / 127.0) * displacement_size
-            offset_y = -offset_y
+            # Calculate offset using simplified displacement calculation
+            # Convert from 0-255 range to -127 to +127 range, then apply displacement_size
+            offset_x = (disp_pixel[0] - 128) * displacement_size
+            offset_y = (disp_pixel[1] - 128) * displacement_size
             
-            max_offset = displacement_size * 0.5
-            offset_x = max(-max_offset, min(max_offset, offset_x))
-            offset_y = max(-max_offset, min(max_offset, offset_y))
+            # Calculate sample coordinates with rounding for pixel-perfect sampling
+            sample_x = max(0, min(width - 1, int(round(x + offset_x))))
+            sample_y = max(0, min(height - 1, int(round(y + offset_y))))
             
-            sample_x = x + offset_x
-            sample_y = y + offset_y
-            
-            if (sample_x < -0.5 or sample_x >= width - 0.5 or 
-                sample_y < -0.5 or sample_y >= height - 0.5):
-                result_data[y, x] = [0, 0, 0, 0]
-            else:
-                sample_x_floor = int(np.floor(sample_x))
-                sample_y_floor = int(np.floor(sample_y))
-                sample_x_ceil = sample_x_floor + 1
-                sample_y_ceil = sample_y_floor + 1
-                
-                sample_x_floor = max(0, min(width - 1, sample_x_floor))
-                sample_y_floor = max(0, min(height - 1, sample_y_floor))
-                sample_x_ceil = max(0, min(width - 1, sample_x_ceil))
-                sample_y_ceil = max(0, min(height - 1, sample_y_ceil))
-                
-                fx = sample_x - sample_x_floor
-                fy = sample_y - sample_y_floor
-                
-                tl = ref_data[sample_y_floor, sample_x_floor]
-                tr = ref_data[sample_y_floor, sample_x_ceil]
-                bl = ref_data[sample_y_ceil, sample_x_floor]
-                br = ref_data[sample_y_ceil, sample_x_ceil]
-                
-                top = tl * (1 - fx) + tr * fx
-                bottom = bl * (1 - fx) + br * fx
-                final = top * (1 - fy) + bottom * fy
-                
-                result_data[y, x] = final.astype(np.uint8)
+            # Direct pixel sampling (no interpolation)
+            result_data[y, x] = ref_data[sample_y, sample_x]
                         
     return Image.fromarray(result_data, 'RGBA')
     
