@@ -21,4 +21,6 @@ Pixel Strength can let you move by multiple pixels in one click rather then mult
 
 **Final note**
 
-Enjoy the application if there are issues just let me know and ill sort them at somepoint 
+Enjoy the application if there are issues just let me know on the discord and ill sort them at somepoint
+
+discord: https://discord.gg/SmFDkrCn2x
