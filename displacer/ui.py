@@ -115,6 +115,9 @@ def bind_canvas_events(app):
     app.prev_canvas.bind("<B1-Motion>", lambda e: app.canvas_drag(e, from_preview=True))
     app.prev_canvas.bind("<ButtonRelease-1>", lambda e: app.canvas_release(e, from_preview=True))
     app.prev_canvas.bind("<MouseWheel>", app.zoom_canvas)
+    app.disp_canvas.bind("<Motion>", app.canvas_hover)
+    app.prev_canvas.bind("<Motion>", lambda e: app.canvas_hover(e, from_preview=True))
+
 
 def display_image_on_canvas(image, canvas, zoom, attr_name):
     display_size = (int(image.width * zoom), int(image.height * zoom))
