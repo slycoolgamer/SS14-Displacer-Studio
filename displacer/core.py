@@ -23,7 +23,11 @@ class SS14DisplacementTool:
         self.selection_active = False
         self.current_tool = tk.StringVar(value="paint")
         self.selection_op = tk.StringVar(value="replace")
-        
+
+        # Hover System
+        self.hover_position = None
+        self.brush_preview_id = None
+
         # Selection drawing state
         self.selection_start = None
         self.temp_selection = None
@@ -100,6 +104,8 @@ class SS14DisplacementTool:
             self.magic_select(*pos)
 
         self.update_displays()
+        self.hover_position = pos  
+        self.draw_brush_preview()  
 
     def canvas_drag(self, event, from_preview=False):
         if not self.displacement_image:
@@ -110,6 +116,8 @@ class SS14DisplacementTool:
         pos = self.canvas_to_image_coords(event, canvas)
         if not pos:
             return
+        self.hover_position = pos  
+        self.draw_brush_preview()  
 
         # Updated to handle paint and erase as separate tools
         if tool in ["paint", "erase"] and self.is_drawing:
@@ -143,6 +151,8 @@ class SS14DisplacementTool:
             self.lasso_points = []
 
         self.update_displays()
+        self.hover_position = None
+        self.draw_brush_preview()
 
     def magic_select(self, x, y):
         if not self.displacement_image:
@@ -424,6 +434,8 @@ class SS14DisplacementTool:
                 display_img = Image.alpha_composite(display_img, temp_border_overlay)
             
         ui.display_image_on_canvas(display_img, self.disp_canvas, self.zoom, 'disp_display')
+        self.draw_brush_preview()
+
         
     def update_preview(self):
         if not self.displacement_image:
@@ -461,6 +473,60 @@ class SS14DisplacementTool:
         w, h = self.displacement_image.size
         self.displacement_image = Image.new("RGBA", (w, h), (128, 128, 0, 255))
         self.update_displays()
-        
+
+    def canvas_hover(self, event, from_preview=False):
+        if not self.displacement_image:
+            return
+
+        canvas = self.prev_canvas if from_preview else self.disp_canvas
+        pos = self.canvas_to_image_coords(event, canvas)
+        if not pos:
+            return
+
+        self.hover_position = pos
+        self.draw_brush_preview()
+
+    def draw_brush_preview(self):
+        if not self.hover_position or self.current_tool.get() not in ["paint", "erase"]:
+            return
+
+        x_center, y_center = self.hover_position
+        brush_size = self.brush_size.get()
+        radius = brush_size // 2
+
+        for canvas in [self.disp_canvas, self.prev_canvas]:
+            canvas.delete("brush_preview")
+
+            img_w, img_h = self.displacement_image.size
+            canvas_w, canvas_h = canvas.winfo_width(), canvas.winfo_height()
+            display_w, display_h = img_w * self.zoom, img_h * self.zoom
+            offset_x = (canvas_w - display_w) // 2
+            offset_y = (canvas_h - display_h) // 2
+
+            shape = set()
+            for dy in range(-radius, radius + 1):
+                for dx in range(-radius, radius + 1):
+                    if math.sqrt(dx * dx + dy * dy) <= radius:
+                        px, py = x_center + dx, y_center + dy
+                        if 0 <= px < img_w and 0 <= py < img_h:
+                            shape.add((px, py))
+
+            for (px, py) in shape:
+                screen_x = offset_x + px * self.zoom
+                screen_y = offset_y + py * self.zoom
+                z = self.zoom
+
+                # Draw edge lines only if neighboring pixel is outside the shape
+                if (px, py - 1) not in shape:
+                    canvas.create_line(screen_x, screen_y, screen_x + z, screen_y, fill="white", tags="brush_preview")
+                if (px, py + 1) not in shape:
+                    canvas.create_line(screen_x, screen_y + z, screen_x + z, screen_y + z, fill="white", tags="brush_preview")
+                if (px - 1, py) not in shape:
+                    canvas.create_line(screen_x, screen_y, screen_x, screen_y + z, fill="white", tags="brush_preview")
+                if (px + 1, py) not in shape:
+                    canvas.create_line(screen_x + z, screen_y, screen_x + z, screen_y + z, fill="white", tags="brush_preview")
+
+
+
     def run(self):
         self.root.mainloop()
