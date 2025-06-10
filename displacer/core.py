@@ -38,6 +38,10 @@ class SS14DisplacementTool:
         self.paint_strength = tk.IntVar(value=1)
         self.zoom = 2.0
         self.magic_tolerance = tk.IntVar(value=32)
+        #grid
+        self.show_sprite_borders = tk.BooleanVar(value=False)
+        self.sprite_tile_size = 32  # default, could make configurable later
+
         
         # Drawing state
         self.is_drawing = False
@@ -435,6 +439,9 @@ class SS14DisplacementTool:
             
         ui.display_image_on_canvas(display_img, self.disp_canvas, self.zoom, 'disp_display')
         self.draw_brush_preview()
+        if self.show_sprite_borders.get():
+            self.draw_sprite_grid(self.disp_canvas)
+
 
         
     def update_preview(self):
@@ -461,7 +468,9 @@ class SS14DisplacementTool:
             
         if preview:
             ui.display_image_on_canvas(preview, self.prev_canvas, self.zoom, 'prev_display')
-        
+        if self.show_sprite_borders.get():
+            self.draw_sprite_grid(self.prev_canvas)
+
     def zoom_canvas(self, event):
         self.zoom = max(0.5, min(8.0, self.zoom * (1.2 if event.delta > 0 else 1/1.2)))
         self.update_displays()
@@ -525,6 +534,51 @@ class SS14DisplacementTool:
                     canvas.create_line(screen_x, screen_y, screen_x, screen_y + z, fill="white", tags="brush_preview")
                 if (px + 1, py) not in shape:
                     canvas.create_line(screen_x + z, screen_y, screen_x + z, screen_y + z, fill="white", tags="brush_preview")
+    
+    def draw_sprite_grid(self, canvas):
+        if not self.displacement_image:
+            return
+
+        canvas.delete("sprite_grid")
+
+        img_w, img_h = self.displacement_image.size
+        canvas_w, canvas_h = canvas.winfo_width(), canvas.winfo_height()
+        display_w, display_h = img_w * self.zoom, img_h * self.zoom
+        offset_x = (canvas_w - display_w) // 2
+        offset_y = (canvas_h - display_h) // 2
+
+        step = self.sprite_tile_size
+        for x in range(0, img_w, step):
+            screen_x = offset_x + x * self.zoom
+            canvas.create_line(screen_x, offset_y, screen_x, offset_y + display_h,
+                            fill="cyan", width=1, tags="sprite_grid")
+        for y in range(0, img_h, step):
+            screen_y = offset_y + y * self.zoom
+            canvas.create_line(offset_x, screen_y, offset_x + display_w, screen_y,
+                            fill="cyan", width=1, tags="sprite_grid")
+
+    def open_sprite_grid_config(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Sprite Grid Settings")
+        dialog.geometry("250x150")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        enabled_var = tk.BooleanVar(value=self.show_sprite_borders.get())
+        size_var = tk.IntVar(value=self.sprite_tile_size)
+
+        ttk.Checkbutton(dialog, text="Show Sprite Grid", variable=enabled_var).pack(pady=(10, 5))
+
+        ttk.Label(dialog, text="Tile Size (px):").pack()
+        ttk.Spinbox(dialog, from_=1, to=256, textvariable=size_var, width=8).pack(pady=5)
+
+        def apply_and_close():
+            self.show_sprite_borders.set(enabled_var.get())
+            self.sprite_tile_size = size_var.get()
+            dialog.destroy()
+            self.update_displays()
+
+        ttk.Button(dialog, text="Apply", command=apply_and_close).pack(pady=10)
 
 
 
