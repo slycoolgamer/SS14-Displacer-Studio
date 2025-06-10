@@ -30,6 +30,8 @@ def setup_menubar(root, app):
 
     view_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="View", menu=view_menu)
+    view_menu.add_command(label="Sprite Grid...", command=app.open_sprite_grid_config)
+
     
     root.bind('<Control-z>', lambda e: app.undo())
     root.bind('<Control-a>', lambda e: app.select_all())
