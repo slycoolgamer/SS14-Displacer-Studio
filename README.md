@@ -38,9 +38,9 @@ Save maps and previews.
 
 Undo, clear all, and deselect and other functions.
 
-👀 View Menu (Planned Features)
+👀 View Menu
 
-**Final note**
+Show sprite borders for sprite sheets
 
 Enjoy the application if there are issues just let me know on the discord and ill sort them at somepoint
 
